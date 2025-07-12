@@ -1,42 +1,37 @@
 const express = require('express');
-const axios = require('axios');
+const { DefaultAzureCredential } = require('@azure/identity');
+const { BlobServiceClient } = require('@azure/storage-blob');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Altere para seu container e storage
-const blobUrl = 'https://testerafael.blob.core.windows.net/teste1?restype=container&comp=list';
+// Nome da sua conta e container
+const accountName = 'stfunctiontesterafaelrg';
+const containerName = 'teste1'; // Altere se for outro
 
 app.get('/', async (req, res) => {
   try {
-    // Obtem token via Managed Identity
-    const tokenResponse = await axios.get(
-      'http://169.254.169.254/metadata/identity/oauth2/token',
-      {
-        headers: { Metadata: 'true' },
-        params: {
-          'api-version': '2018-02-01',
-          resource: 'https://storage.azure.com/'
-        }
-      }
+    const credential = new DefaultAzureCredential();
+
+    const blobServiceClient = new BlobServiceClient(
+      `https://${accountName}.blob.core.windows.net`,
+      credential
     );
 
-    const accessToken = tokenResponse.data.access_token;
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    let list = '';
 
-    // Faz chamada ao blob
-    const blobResponse = await axios.get(blobUrl, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'x-ms-version': '2021-04-10'
-      }
-    });
+    for await (const blob of containerClient.listBlobsFlat()) {
+      list += `🟢 ${blob.name}\n`;
+    }
 
-    res.send('✅ Sucesso! Acesso ao Blob realizado!\n\n' + blobResponse.data);
-  } catch (error) {
-    res.status(500).send(`❌ Falha no acesso ao Blob:\n\n${error.message}\n\n${error.response?.data || error}`);
+    res.send(`✅ Sucesso ao acessar container "${containerName}":\n\n${list}`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(`❌ Erro ao acessar o Blob:\n\n${err.message || err}`);
   }
 });
 
 app.listen(port, () => {
-  console.log(`App rodando em http://localhost:${port}`);
+  console.log(`App rodando na porta ${port}`);
 });
