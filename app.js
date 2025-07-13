@@ -1,52 +1,42 @@
+// app.js
 const express = require('express');
 const { BlobServiceClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 🔐 Pegando dados do ambiente
-const accountName = process.env.ACCOUNT_NAME;
-const accountKey = process.env.ACCOUNT_KEY;
-const containerName = process.env.CONTAINER_NAME;
+// Lê variáveis de ambiente seguras
+const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
+const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
 
-// Verificação básica
 if (!accountName || !accountKey || !containerName) {
-  console.error('❌ Variáveis de ambiente não definidas corretamente.');
-  process.exit(1);
+  throw new Error("Variáveis de ambiente não definidas corretamente.");
 }
 
-// 🔑 Cria credencial baseada na chave da conta
+// Cria credencial baseada na chave
 const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
 
-// 🔗 Cria cliente do serviço Blob
+// Cria cliente do Blob Storage
 const blobServiceClient = new BlobServiceClient(
   `https://${accountName}.blob.core.windows.net`,
   sharedKeyCredential
 );
 
-// 🔁 Rota para listar blobs
 app.get('/', async (req, res) => {
   try {
     const containerClient = blobServiceClient.getContainerClient(containerName);
     let list = '';
     for await (const blob of containerClient.listBlobsFlat()) {
-      list += `<li>📄 ${blob.name}</li>\n`;
+      list += `\u2705 ${blob.name}\n`;
     }
-
-    res.send(`
-      <h2>✅ Blobs no container "<strong>${containerName}</strong>"</h2>
-      <ul>${list}</ul>
-    `);
+    res.send(`\u2705 Blobs no container "${containerName}":\n\n${list}`);
   } catch (error) {
-    console.error('Erro ao acessar o Blob:', error.message || error);
-    res.status(500).send(`
-      <h2>❌ Erro ao acessar o Blob:</h2>
-      <pre>${error.message || error}</pre>
-    `);
+    console.error(error);
+    res.status(500).send(`\u274C Erro ao acessar o Blob:\n\n${error.message || error}`);
   }
 });
 
-// ▶️ Inicia o servidor
 app.listen(port, () => {
-  console.log(`🚀 App rodando em http://localhost:${port}`);
+  console.log(`\uD83D\uDE80 App rodando em http://localhost:${port}`);
 });
