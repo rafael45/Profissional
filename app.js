@@ -1,23 +1,14 @@
-// app.js
 const express = require('express');
 const { BlobServiceClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Lê variáveis de ambiente seguras
-const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME || 'testerafael';
 const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
-const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
+const containerName = 'teste1'; // substitua se for outro container
 
-if (!accountName || !accountKey || !containerName) {
-  throw new Error("Variáveis de ambiente não definidas corretamente.");
-}
-
-// Cria credencial baseada na chave
 const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
-
-// Cria cliente do Blob Storage
 const blobServiceClient = new BlobServiceClient(
   `https://${accountName}.blob.core.windows.net`,
   sharedKeyCredential
@@ -26,17 +17,17 @@ const blobServiceClient = new BlobServiceClient(
 app.get('/', async (req, res) => {
   try {
     const containerClient = blobServiceClient.getContainerClient(containerName);
-    let list = '';
+    let blobList = '';
     for await (const blob of containerClient.listBlobsFlat()) {
-      list += `\u2705 ${blob.name}\n`;
+      blobList += `✅ ${blob.name}<br>`;
     }
-    res.send(`\u2705 Blobs no container "${containerName}":\n\n${list}`);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send(`\u274C Erro ao acessar o Blob:\n\n${error.message || error}`);
+    res.send(`🎉 Blobs no container <strong>${containerName}</strong>:<br>${blobList}`);
+  } catch (err) {
+    console.error('Erro ao acessar o Blob:', err.message);
+    res.status(500).send('Erro ao acessar o Blob: ' + err.message);
   }
 });
 
 app.listen(port, () => {
-  console.log(`\uD83D\uDE80 App rodando em http://localhost:${port}`);
+  console.log(`🚀 App online na porta ${port}`);
 });
