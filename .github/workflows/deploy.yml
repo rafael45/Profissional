@@ -10,29 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout do repositório
-        uses: actions/checkout@v3
+      - name: Checkout do código
+        uses: actions/checkout@v2
 
-      - name: 🔧 Configurar Node.js
+      - name: Configurar Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
 
-      - name: 📦 Instalar dependências
+      - name: Instalar dependências
         run: npm install
 
-      - name: 🧪 Testar build (opcional)
-        run: echo "Nenhum build necessário para app simples."
-
-      - name: 🔐 Login no Azure
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: 🚀 Deploy para Azure Web App
+      - name: Deploy no Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: nome-do-seu-appservice
-          slot-name: Production
+          app-name: 'NOME-DO-SEU-APP-SERVICE' # 🔁 Troque pelo nome real do App Service
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: .
-
