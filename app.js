@@ -1,34 +1,29 @@
 const express = require('express');
 const { BlobServiceClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
 
-// Inicializa o Express
-tconst app = express();
-// Porta fornecida pelo Azure ou fallback local
+const app = express();
 const port = process.env.PORT || 3000;
 
-// Nome da conta e chave de acesso (variáveis de ambiente no Azure)
-const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
-const accountKey  = process.env.AZURE_STORAGE_ACCOUNT_KEY;
-const containerName = process.env.AZURE_STORAGE_CONTAINER || 'teste1';
+// Nome da conta e chave em variáveis de ambiente
+const accountName    = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+const accountKey     = process.env.AZURE_STORAGE_ACCOUNT_KEY;
+const containerName  = process.env.AZURE_STORAGE_CONTAINER || 'teste1';
 
-// Validação básica
 if (!accountName || !accountKey) {
-  console.error('⚠️ Variáveis AZURE_STORAGE_ACCOUNT_NAME e _KEY não configuradas.');
+  console.error('⚠️ AZURE_STORAGE_ACCOUNT_NAME ou AZURE_STORAGE_ACCOUNT_KEY não configuradas.');
   process.exit(1);
 }
 
-// Cria credencial e cliente do Blob Service
 const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
-const blobServiceClient = new BlobServiceClient(
+const blobServiceClient   = new BlobServiceClient(
   `https://${accountName}.blob.core.windows.net`,
   sharedKeyCredential
 );
 
-// Rota raiz: lista blobs do container
 app.get('/', async (req, res) => {
   try {
     const containerClient = blobServiceClient.getContainerClient(containerName);
-    let html = `<h2>👍 Blobs no container <strong>${containerName}</strong>:</h2><ul>`;
+    let html = `<h2>✅ Blobs no container "${containerName}"</h2><ul>`;
     for await (const blob of containerClient.listBlobsFlat()) {
       html += `<li>🟢 ${blob.name}</li>`;
     }
@@ -40,6 +35,4 @@ app.get('/', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`🚀 App rodando em http://localhost:${port}`);
-});
+app.listen(port, () => console.log(`🚀 App rodando na porta ${port}`));
