@@ -5,11 +5,10 @@ const { BlobServiceClient } = require('@azure/storage-blob');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 🔐 Substitua com o nome da sua conta e container
-const accountName = 'stfunctiontesterafaelrg'; // Nome da Storage Account
-const containerName = 'teste1'; // Nome do container
+// Nome da sua Storage Account e container
+const accountName = 'stfunctiontesterafaelrg';
+const containerName = 'teste1';
 
-// 🌐 Rota principal
 app.get('/', async (req, res) => {
   try {
     const credential = new DefaultAzureCredential();
@@ -32,7 +31,6 @@ app.get('/', async (req, res) => {
   }
 });
 
-// 🚀 Iniciar servidor
 app.listen(port, () => {
   console.log(`🚀 App rodando em http://localhost:${port}`);
 });
