@@ -1,39 +1,37 @@
 const express = require('express');
-const { DefaultAzureCredential } = require('@azure/identity');
-const { BlobServiceClient } = require('@azure/storage-blob');
+const { BlobServiceClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// Nome da conta e container
+// 🔒 Substitua pelas suas informações
 const accountName = 'testerafael';
+const accountKey = 'dSvCXSztNsU0uIyPlJWkTCLYNlcF6B9ql2q4MIclqSlv3xbxHW5hHjL4xDkjeVMt5zLdn7EFgwTq+AStCX9zgA==';
 const containerName = 'teste';
 
 app.get('/', async (req, res) => {
   try {
-    const credential = new DefaultAzureCredential();
+    // Cria a credencial baseada na chave da conta
+    const credential = new StorageSharedKeyCredential(accountName, accountKey);
 
+    // Cria o cliente do serviço Blob
     const blobServiceClient = new BlobServiceClient(
       `https://${accountName}.blob.core.windows.net`,
       credential
     );
 
+    // Acessa o container
     const containerClient = blobServiceClient.getContainerClient(containerName);
-    const blobList = [];
 
+    let list = '';
     for await (const blob of containerClient.listBlobsFlat()) {
-      blobList.push(blob.name);
+      list += `🟢 ${blob.name}\n`;
     }
 
-    res.send(`
-      <h2>✅ Blobs no container "${containerName}"</h2>
-      <ul>
-        ${blobList.map(name => `<li>${name}</li>`).join('')}
-      </ul>
-    `);
+    res.send(`✅ Sucesso! Blobs no container "${containerName}":\n\n${list}`);
   } catch (error) {
-    console.error('Erro ao acessar o Blob:', error.message);
-    res.send(`<h2>❌ Erro ao acessar o Blob:</h2><pre>${error.message}</pre>`);
+    console.error(error);
+    res.status(500).send(`❌ Erro ao acessar o Blob:\n\n${error.message || error}`);
   }
 });
 
