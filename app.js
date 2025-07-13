@@ -4,12 +4,18 @@ const { BlobServiceClient, StorageSharedKeyCredential } = require('@azure/storag
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 🔐 Substitua pelos seus dados
-const accountName = 'stfunctiontesterafaelrg';
-const accountKey = 'dSvCXSztNsU0uIyPlJWkTCLYNlcF6B9ql2q4MIclqSlv3xbxHW5hHjL4xDkjeVMt5zLdn7EFgwTq+AStCX9zgA==';
-const containerName = 'teste1';
+// 🔐 Pegando dados do ambiente
+const accountName = process.env.ACCOUNT_NAME;
+const accountKey = process.env.ACCOUNT_KEY;
+const containerName = process.env.CONTAINER_NAME;
 
-// 🔧 Cria credencial baseada na chave da conta
+// Verificação básica
+if (!accountName || !accountKey || !containerName) {
+  console.error('❌ Variáveis de ambiente não definidas corretamente.');
+  process.exit(1);
+}
+
+// 🔑 Cria credencial baseada na chave da conta
 const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
 
 // 🔗 Cria cliente do serviço Blob
@@ -18,22 +24,29 @@ const blobServiceClient = new BlobServiceClient(
   sharedKeyCredential
 );
 
+// 🔁 Rota para listar blobs
 app.get('/', async (req, res) => {
   try {
     const containerClient = blobServiceClient.getContainerClient(containerName);
-
     let list = '';
     for await (const blob of containerClient.listBlobsFlat()) {
-      list += `🟢 ${blob.name}\n`;
+      list += `<li>📄 ${blob.name}</li>\n`;
     }
 
-    res.send(`✅ Sucesso! Blobs no container "${containerName}":\n\n${list}`);
+    res.send(`
+      <h2>✅ Blobs no container "<strong>${containerName}</strong>"</h2>
+      <ul>${list}</ul>
+    `);
   } catch (error) {
-    console.error(error);
-    res.status(500).send(`❌ Erro ao acessar o Blob:\n\n${error.message || error}`);
+    console.error('Erro ao acessar o Blob:', error.message || error);
+    res.status(500).send(`
+      <h2>❌ Erro ao acessar o Blob:</h2>
+      <pre>${error.message || error}</pre>
+    `);
   }
 });
 
+// ▶️ Inicia o servidor
 app.listen(port, () => {
   console.log(`🚀 App rodando em http://localhost:${port}`);
 });
