@@ -1,29 +1,23 @@
-name: Deploy Node.js app to Azure Web App
-
-on:
-  push:
-    branches:
-      - main
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v3
 
-      - name: Configurar Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18.x'
+    - name: Login to Azure using OIDC
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Instalar dependências
-        run: npm install
-
-      - name: Deploy no Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'NOME-DO-SEU-APP-SERVICE' # 🔁 Troque pelo nome real do App Service
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-          package: .
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'nome-do-seu-app'
+        package: .
