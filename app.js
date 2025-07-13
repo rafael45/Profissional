@@ -2,18 +2,18 @@ const express = require('express');
 const { BlobServiceClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
 
 // Inicializa o Express
-const app = express();
+tconst app = express();
 // Porta fornecida pelo Azure ou fallback local
 const port = process.env.PORT || 3000;
 
-// Nome da conta e chave de acesso (definidos como variáveis de ambiente no Azure)
+// Nome da conta e chave de acesso (variáveis de ambiente no Azure)
 const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
 const accountKey  = process.env.AZURE_STORAGE_ACCOUNT_KEY;
 const containerName = process.env.AZURE_STORAGE_CONTAINER || 'teste1';
 
 // Validação básica
 if (!accountName || !accountKey) {
-  console.error('🚨 Variáveis de ambiente AZURE_STORAGE_ACCOUNT_NAME e AZURE_STORAGE_ACCOUNT_KEY não configuradas.');
+  console.error('⚠️ Variáveis AZURE_STORAGE_ACCOUNT_NAME e _KEY não configuradas.');
   process.exit(1);
 }
 
@@ -28,10 +28,9 @@ const blobServiceClient = new BlobServiceClient(
 app.get('/', async (req, res) => {
   try {
     const containerClient = blobServiceClient.getContainerClient(containerName);
-    let html = `<h2>🎉 Blobs no container <strong>${containerName}</strong>:</h2><ul>`;
-
+    let html = `<h2>👍 Blobs no container <strong>${containerName}</strong>:</h2><ul>`;
     for await (const blob of containerClient.listBlobsFlat()) {
-      html += `<li>✅ ${blob.name}</li>`;
+      html += `<li>🟢 ${blob.name}</li>`;
     }
     html += '</ul>';
     res.send(html);
@@ -41,17 +40,6 @@ app.get('/', async (req, res) => {
   }
 });
 
-// Inicia servidor
 app.listen(port, () => {
-  console.log(`🚀 App rodando na porta ${port}`);
+  console.log(`🚀 App rodando em http://localhost:${port}`);
 });
-
-/**
- * NO AZURE:
- * 1) Defina as variáveis de ambiente no App Service:
- *    - AZURE_STORAGE_ACCOUNT_NAME = <nome_da_storage_account>
- *    - AZURE_STORAGE_ACCOUNT_KEY  = <chave_de_acesso>
- *    - AZURE_STORAGE_CONTAINER    = <nome_do_container> (opcional)
- * 2) Garanta que a publicação (por GitHub Actions ou ZIP deploy) inclua o app.js e package.json.
- * 3) Em Networking do Storage Account, libere acesso para as redes ou IPs do App Service.
- */
