@@ -1,0 +1,21 @@
+name: Upload para Azure Storage
+
+on:
+  push:
+    branches: [ main ]      # dispara quando você faz push para a branch main
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar o código do repositório
+        uses: actions/checkout@v3
+
+      - name: Instalar dependências Node.js
+        run: npm install @azure/storage-blob
+
+      - name: Executar o script de upload
+        env:
+          STORAGE_CONNECTION_STRING: ${{ secrets.STORAGE_CONNECTION_STRING }}
+        run: node upload.js
